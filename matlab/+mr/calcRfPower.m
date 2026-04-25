@@ -20,13 +20,12 @@ function [total_energy, peak_pwr, rf_rms]=calcRfPower(rf, dt)
 %     computed.
 %
 %   INPUTS
-%     rf   struct   RF event struct from mr.makeSincPulse,           required
-%                   mr.makeBlockPulse, mr.makeGaussPulse,
-%                   mr.makeArbitraryRf, mr.makeSLRpulse, or
-%                   mr.makeAdiabaticPulse. Must have fields .t
-%                   (seconds), .signal (complex Hz), and .shape_dur
-%                   (seconds).
-%     dt   double   resampling step in seconds. Default: 1e-6.       optional, positional
+%     rf  [required]  struct, RF event struct from mr.makeSincPulse,
+%                     mr.makeBlockPulse, mr.makeGaussPulse, mr.makeArbitraryRf,
+%                     mr.makeSLRpulse, or mr.makeAdiabaticPulse. Must have
+%                     fields .t (seconds), .signal (complex Hz), and .shape_dur
+%                     (seconds).
+%     dt  [optional]  double, resampling step in seconds. Default: 1e-6.
 %
 %   OUTPUT
 %     total_energy  double, Hz (= Hz^2 * s), integral of |rf|^2 over the pulse duration

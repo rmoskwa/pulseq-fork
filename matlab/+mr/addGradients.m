@@ -32,10 +32,13 @@ function grad = addGradients(grads, varargin)
 %     returned gradient's delay is the smallest delay among the inputs.
 %
 %   INPUTS
-%     grads    cell array of >=2 gradient event structs on the same channel                required
-%     system   struct from mr.opts. If omitted or empty, mr.opts() defaults are used.      optional (positional or name-value)
-%     maxGrad  Hz/m, override for max gradient amplitude used by the arbitrary-grad path.  name-value, default 0 (use system.maxGrad)
-%     maxSlew  Hz/m/s, override for max slew rate used by the arbitrary-grad path.         name-value, default 0 (use system.maxSlew)
+%     grads    [required]    cell array of >=2 gradient event structs on the same channel
+%     system   [optional]    struct from mr.opts. If omitted or empty, mr.opts() defaults
+%                            are used. Also accepted as 'system', sys name/value pair.
+%     maxGrad  [name/value]  double, Hz/m, override for max gradient amplitude used by
+%                            the arbitrary-grad path. Default 0 (use system.maxGrad).
+%     maxSlew  [name/value]  double, Hz/m/s, override for max slew rate used by the
+%                            arbitrary-grad path. Default 0 (use system.maxSlew).
 %
 %   OUTPUT
 %     grad struct. Shape depends on the input mix (see PURPOSE). Field order:

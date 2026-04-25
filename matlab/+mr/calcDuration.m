@@ -18,15 +18,17 @@ function duration=calcDuration(varargin)
 %     Unknown event types are silently ignored and contribute 0.
 %
 %   INPUTS
-%     varargin  Each argument is one of:
-%                 - event struct with a .type field set to one of
-%                   'delay', 'rf', 'grad', 'trap', 'adc', 'output', 'trigger'
-%                 - a block struct (i.e. has a .rf field; typically obtained
-%                   from mr.Sequence/getBlock). Only a single block struct
-%                   may be passed.
-%                 - a numeric scalar interpreted as a blockDuration field
-%                   (seconds). Used internally when block2events expands
-%                   a block struct; rarely passed directly by user code.
+%     varargin  [required]  One or more arguments, each one of:
+%                             - event struct with a .type field set to one of
+%                               'delay', 'rf', 'grad', 'trap', 'adc', 'output',
+%                               'trigger'
+%                             - a block struct (i.e. has a .rf field; typically
+%                               obtained from mr.Sequence/getBlock). Only a single
+%                               block struct may be passed.
+%                             - a numeric scalar interpreted as a blockDuration
+%                               field (seconds). Used internally when block2events
+%                               expands a block struct; rarely passed directly by
+%                               user code.
 %
 %   OUTPUT
 %     duration  double, seconds. The maximum event duration encountered.

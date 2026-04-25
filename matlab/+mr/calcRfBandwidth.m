@@ -25,18 +25,16 @@ function [bw,fc,spectrum,f,rfs,t]=calcRfBandwidth(rf, cutoff, df, dt)
 %     they cannot be passed as name/value pairs.
 %
 %   INPUTS
-%     rf      struct   RF event struct from mr.makeSincPulse,              required
-%                      mr.makeBlockPulse, mr.makeGaussPulse,
-%                      mr.makeArbitraryRf, mr.makeSLRpulse, or
-%                      mr.makeAdiabaticPulse. Must have fields .t
-%                      (seconds), .signal (complex Hz), .freqOffset (Hz),
-%                      .freqPPM, .phaseOffset (radians), and .center
-%                      (seconds).
-%     cutoff  double   fractional threshold for bandwidth measurement,     optional, positional
-%                      dimensionless in (0,1]. 0.5 gives FWHM.
-%                      Default: 0.5.
-%     df      double   spectral resolution in Hz. Default: 10.             optional, positional
-%     dt      double   time sampling step in seconds. Default: 1e-6.       optional, positional
+%     rf      [required]  struct, RF event struct from mr.makeSincPulse,
+%                         mr.makeBlockPulse, mr.makeGaussPulse, mr.makeArbitraryRf,
+%                         mr.makeSLRpulse, or mr.makeAdiabaticPulse. Must have
+%                         fields .t (seconds), .signal (complex Hz),
+%                         .freqOffset (Hz), .freqPPM, .phaseOffset (radians),
+%                         and .center (seconds).
+%     cutoff  [optional]  double, fractional threshold for bandwidth measurement,
+%                         dimensionless in (0,1]. 0.5 gives FWHM. Default: 0.5.
+%     df      [optional]  double, spectral resolution in Hz. Default: 10.
+%     dt      [optional]  double, time sampling step in seconds. Default: 1e-6.
 %
 %   OUTPUT
 %     bw        double, Hz, bandwidth at the given cutoff threshold

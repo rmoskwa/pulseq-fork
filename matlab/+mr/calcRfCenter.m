@@ -23,14 +23,13 @@ function [tc, ic, fi]=calcRfCenter(rf)
 %     Otherwise tc is computed from the amplitude peak of rf.signal.
 %
 %   INPUTS
-%     rf   struct   RF event struct. Must have fields .t (seconds, time required
-%                   axis on the RF raster) and .signal (complex Hz,
-%                   waveform). If field .center (seconds) is present it
-%                   is used directly; otherwise the function detects the
-%                   peak of abs(rf.signal). Typically produced by
-%                   mr.makeSincPulse, mr.makeBlockPulse,
-%                   mr.makeGaussPulse, mr.makeArbitraryRf,
-%                   mr.makeSLRpulse, or mr.makeAdiabaticPulse.
+%     rf  [required]  struct, RF event struct. Must have fields .t (seconds, time
+%                     axis on the RF raster) and .signal (complex Hz, waveform).
+%                     If field .center (seconds) is present it is used directly;
+%                     otherwise the function detects the peak of abs(rf.signal).
+%                     Typically produced by mr.makeSincPulse, mr.makeBlockPulse,
+%                     mr.makeGaussPulse, mr.makeArbitraryRf, mr.makeSLRpulse,
+%                     or mr.makeAdiabaticPulse.
 %
 %   OUTPUT
 %     tc   double, seconds, time of the RF center relative to the start
