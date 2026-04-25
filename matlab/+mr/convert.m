@@ -1,10 +1,86 @@
 function out=convert(in,varargin)
-%OPTS Set gradient limits of the MR system.
-%   out=convert(in,from,to) Convert the numerical data in, given in
-%   specificed units 'from' to units specified in 'to'.
+%convert Convert numeric values between MR unit conventions.
 %
-%   Valid unit strings are:
-%    'Hz/m' 'mT/m' 'rad/ms/mm' 'Hz/m/s' 'mT/m/ms' 'T/m/s' 'rad/ms/mm/ms'
+%   PURPOSE
+%     Converts gradient amplitudes, slew rates, or RF (B1) amplitudes
+%     between physical units (mT/m, T/m/s, uT, ...) and the Hz-based
+%     internal units used by Pulseq (Hz/m, Hz/m/s, Hz). Conversions
+%     between Tesla-based and Hz-based units use the gyromagnetic
+%     ratio (default 42.576 MHz/T for 1H); override via 'gamma' for
+%     other nuclei.
+%
+%     mr.opts calls mr.convert internally on its 'maxGrad', 'maxSlew',
+%     and 'maxB1' inputs (controlled by 'gradUnit', 'slewUnit',
+%     'b1Unit'), so values passed to mr.opts do not need to be
+%     pre-converted. Use mr.convert directly when displaying Pulseq
+%     internal values in physical units (e.g., in a report) or when
+%     passing physical-unit values into a function that expects
+%     Hz-based input.
+%
+%   SIGNATURES
+%     out = mr.convert(in, fromUnit)             % toUnit defaults to category standard
+%     out = mr.convert(in, fromUnit, toUnit)     % explicit target unit
+%     out = mr.convert(..., 'gamma', G)          % override gyromagnetic ratio (Hz/T)
+%
+%     If toUnit is omitted (or passed as []), the result is in the
+%     Hz-based "standard" unit for the same category as fromUnit:
+%       B1 amplitude  ->  'Hz'
+%       gradient      ->  'Hz/m'
+%       slew rate     ->  'Hz/m/s'
+%     'in' may be a scalar, vector, matrix, or N-D array; the output
+%     has the same shape.
+%
+%   INPUTS
+%     in        [required]    numeric, any shape, value(s) to convert
+%     fromUnit  [required]    char, one of the unit strings below
+%     toUnit    [optional]    char, one of the unit strings below; default =
+%                             category standard
+%     gamma     [name/value]  numeric, gyromagnetic ratio in Hz/T; default
+%                             42.576e6 (1H)
+%
+%     Valid unit strings, grouped by category:
+%       B1 amplitude:   'Hz', 'T', 'mT', 'uT'
+%       gradient:       'Hz/m', 'mT/m', 'rad/ms/mm'
+%       slew rate:      'Hz/m/s', 'mT/m/ms', 'T/m/s', 'rad/ms/mm/ms'
+%
+%   OUTPUT
+%     out  numeric, same shape as in, expressed in toUnit
+%
+%   ERRORS
+%     - 'MATLAB:unrecognizedStringChoice': fromUnit or toUnit is not
+%       one of the 11 valid unit strings (matched via validatestring).
+%     - 'MATLAB:InputParser:ArgumentFailedValidation': in is not numeric.
+%
+%   NOTES
+%     - No cross-category check is performed. Passing fromUnit and
+%       toUnit from different categories (e.g., 'mT/m' to 'Hz') does
+%       not error, but produces a numerically meaningless result
+%       because the conversion routes through a single Hz-based
+%       standard value. Always pair fromUnit and toUnit within the
+%       same category.
+%     - The default gamma (42.576e6 Hz/T) is the 1H gyromagnetic ratio.
+%       For other nuclei, pass the appropriate gamma via name/value; 
+%       otherwise gradient and B1 conversions involving Tesla-based 
+%       units will be wrong by the ratio of gyromagnetic ratios.
+%     - 'rad/ms/mm' (gradient) and 'rad/ms/mm/ms' (slew) do not depend
+%       on gamma; they are pure angular-frequency conversions
+%       (factor of 2*pi and a power of ten relative to Hz-based units).
+%
+%   EXAMPLE
+%     % Convert physical-unit limits to Pulseq's internal Hz-based units.
+%     gradHz = mr.convert(40,  'mT/m',  'Hz/m');    % gradient amplitude
+%     slewHz = mr.convert(170, 'T/m/s', 'Hz/m/s');  % slew rate
+%     b1Hz   = mr.convert(20,  'uT',    'Hz');      % RF amplitude
+%
+%     % Display Pulseq-internal values back in physical units (e.g., for a report).
+%     fprintf('Max gradient: %.2f mT/m\n',  mr.convert(gradHz, 'Hz/m',   'mT/m'));
+%     fprintf('Max slew:     %.2f T/m/s\n', mr.convert(slewHz, 'Hz/m/s', 'T/m/s'));
+%
+%     % Non-proton nucleus: 13C (gyromagnetic ratio 10.708 MHz/T).
+%     gradHz_13C = mr.convert(40, 'mT/m', 'Hz/m', 'gamma', 10.708e6);
+%
+%   SEE ALSO
+%     mr.opts
 
 persistent parser
 validB1Units={'Hz','T','mT','uT'}; % todo: gauss?
