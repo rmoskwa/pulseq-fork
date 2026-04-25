@@ -65,6 +65,19 @@ function sd = makeSoftDelay(varargin)
 %     - All blocks sharing the same numID must yield the same default duration
 %       (within ~1e-7 s) when computed as (blockDuration - offset)*factor;
 %       otherwise mr.Sequence/checkTiming reports an inconsistency.
+%     - At apply time, mr.Sequence/applySoftDelay rounds the rewritten duration
+%       to system.blockDurationRaster. If the rounding adjustment exceeds
+%       0.5 microseconds, applySoftDelay issues a warning (once per numID).
+%       Choose offset and factor so that the expected input values land near
+%       integer multiples of blockDurationRaster to avoid the warning.
+%     - factor and offset together define an implicit legal range for the
+%       input value supplied to applySoftDelay. If the rewritten duration
+%       comes out negative, applySoftDelay errors with 'Calculated new
+%       duration of the block %d, soft delay %s/%d is negative (%g s)'.
+%       Common ways this happens: a negative factor with offset = max_TE
+%       bounds the input from above; a positive factor with negative offset 
+%       bounds the input from below. The error is a runtime range violation,
+%       not a construction-time validation failure.
 %     - Caches an inputParser in a persistent variable for performance;
 %       no other global state.
 %
