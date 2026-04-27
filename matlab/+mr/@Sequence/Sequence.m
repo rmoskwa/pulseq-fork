@@ -2852,6 +2852,13 @@ classdef Sequence < handle
             codes.section.adc         = bitor(prefix, int64(6));
             codes.section.delays      = bitor(prefix, int64(7));
             codes.section.shapes      = bitor(prefix, int64(8));
+            codes.section.extensions  = bitor(prefix, int64(9));
+            codes.section.triggers    = bitor(prefix, int64(10));
+            codes.section.labelset    = bitor(prefix, int64(11));
+            codes.section.labelinc    = bitor(prefix, int64(12));
+            codes.section.softdelays  = bitor(prefix, int64(13));
+            codes.section.rfshims     = bitor(prefix, int64(14));
+            codes.section.rotations   = bitor(prefix, int64(15));
         end
 
         function id = getExtensionTypeID(obj, str)
