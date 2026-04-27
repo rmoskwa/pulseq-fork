@@ -42,6 +42,7 @@ if isempty(parser)
     parser.addParamValue('skipApply',false,@(x)(islogical(x) && isscalar(x)));
     parser.addParamValue('reflect', [], @(x)(isnumeric(x) && numel(x)<4));
     parser.addParamValue('reorder', [], @(x)(isnumeric(x) && numel(x)<4));
+    parser.addParamValue('noPlots', false, @(x)(logical(x) && isscalar(x)));
 end
 parse(parser,varargin{:});
 opt = parser.Results;
@@ -212,6 +213,23 @@ if isempty(opt.useLabels)
     kCentralReadoutProjection=dot(kCentralReadout,kCentralReadoutDirection(:,ones(1,size(kCentralReadout,2))));
     dkR=median(diff(kCentralReadoutProjection));
 
+    % detect non-constant sampling
+    if any(abs(diff(kCentralReadoutProjection,2)/dkR*numel(kCentralReadoutProjection))>0.1)
+        % see if we can extraxt trapezoid resampling parameters
+        bCentralRO=find(blockStartTimes<t_adcStarts(firstNonNoiseAdcSampe+cCentralReadout-1),1,'last');
+        b=seq.getBlock(bCentralRO);
+        if ~isempty(opt.reorder) && opt.reorder(1)~=1
+            warning('EPI readout gridding parameter detection code is incompatible with the reorder option');
+        else
+            if isfield(b,'gx') && ~isempty(b.gx) && strcmp(b.gx.type,'trap') && isfield(b,'adc') && ~isempty(b.adc)
+                aux.TrapezoidGriddingParameters=[b.gx.riseTime, b.gx.flatTime, b.gx.fallTime, b.adc.delay-b.gx.delay b.adc.numSamples*b.adc.dwell];
+                % TODO: figure out a better way to find TargetGriddedSamples... In Siemens sequences it is often adc.numsamples
+                aux.TargetGriddedSamples=b.adc.numSamples;
+            end
+        end
+        % TODO: figure out a better way to find TargetGriddedSamples... In Siemens sequences it is often adc.numsamples
+    end
+
     % bipolar gradients: detect both and find the reflection point
     if any(diff(signReadout)~=0)
         % find an inverted sign readout close to k-space center
@@ -231,11 +249,15 @@ if isempty(opt.useLabels)
         else
             aux.kReadout = [kInvertedReadoutProjection; kCentralReadoutProjection]; % 1: positive readout, 2: negative readout
         end
-        figure; plot(aux.kReadout(1,:),'.-'); hold on; plot(aux.kReadout(2,:),'.-');plot(aux.kReadout(2,end:-1:1),'x'); title('bipolar readout alignment'); % if crosses overlap the line then REV is symmetric
+        if ~opt.noPlots
+            figure; plot(aux.kReadout(1,:),'.-'); hold on; plot(aux.kReadout(2,:),'.-');plot(aux.kReadout(2,end:-1:1),'x'); title('bipolar readout k-space alignment'); 
+            legend('forward','reverse','rev.refl'); % if crosses overlap the line then REV is symmetric
+            xlabel('sample number (acq. order)');
+            ylabel('k-space, 1/m');
+        end
     else
         aux.kReadout = kCentralReadoutProjection;
     end
-    % not needed information % aux.signReadout=signReadout(cCentralReadout);
 
     % useful results: 
     %   isCartesianReadout : is this trajectory sufficiently Cartesian-like
@@ -431,6 +453,9 @@ if ~opt.skipApply
 end
 
 %% test/plot label settings
+if opt.noPlots
+    return;
+end
 
 if ~opt.skipApply
     lbls=seq.evalLabels('evolution','adc');
