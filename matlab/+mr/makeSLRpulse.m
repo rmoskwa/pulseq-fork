@@ -61,6 +61,7 @@ if isempty(parser)
     addParamValue(parser, 'dwell', 0, @isnumeric); % dummy default value
     % whether it is a refocusing pulse (for k-space calculation)
     addParamValue(parser, 'use', 'excitation', @(x) any(validatestring(x,validPulseUses)));
+    addParamValue(parser, 'recenterOnSample', false, @islogical);
     % optional Python command
     addParamValue(parser, 'pythonCmd', '', @(x)isstring(x)||ischar(x));
 end
@@ -83,7 +84,11 @@ if ~isempty(opt.pythonCmd)
     if status~=0
         error(['provided python executable ''' opt.pythonCmd ''' returns an error on the version check']);
     end
-    [status, result] = system(sprintf('%s  -c "import sigpy" 2>/dev/null',opt.pythonCmd));
+    if ispc
+        [status, result] = system(sprintf('%s  -c "import sigpy" 2>nul',opt.pythonCmd));
+    else
+        [status, result] = system(sprintf('%s  -c "import sigpy" 2>/dev/null',opt.pythonCmd));
+    end
     if status~=0
         error(['provided python executable ''' opt.pythonCmd ''' returns an error on the sigPy check']);
     end

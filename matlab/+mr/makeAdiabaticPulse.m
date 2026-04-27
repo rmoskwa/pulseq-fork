@@ -105,7 +105,11 @@ if ~isempty(opt.pythonCmd)
     if status~=0
         error(['provided python executable ''' opt.pythonCmd ''' returns an error on the version check']);
     end
-    [status, result] = system(sprintf('%s  -c "import sigpy" 2>/dev/null',opt.pythonCmd));
+    if ispc
+        [status, result] = system(sprintf('%s  -c "import sigpy" 2>nul',opt.pythonCmd));
+    else
+        [status, result] = system(sprintf('%s  -c "import sigpy" 2>/dev/null',opt.pythonCmd));
+    end
     if status~=0
         error(['provided python executable ''' opt.pythonCmd ''' returns an error on the sigPy check']);
     end
