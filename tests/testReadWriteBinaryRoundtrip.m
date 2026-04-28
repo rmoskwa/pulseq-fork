@@ -1,4 +1,4 @@
-function tests = testBinaryRoundtripSeqFiles
+function tests = testReadWriteBinaryRoundtrip
     tests = functiontests(localfunctions);
 end
 
