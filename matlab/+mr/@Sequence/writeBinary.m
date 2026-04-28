@@ -149,7 +149,7 @@ if ~isempty(obj.shapeLibrary.keys)
         fwrite(fid, k, 'int32');
         fwrite(fid, num_samples, 'int64');            % num uncompressed
         fwrite(fid, length(data), 'int64');           % num compressed
-        fwrite(fid, data, 'float64');
+        fwrite(fid, data, 'float32');
     end
 end
 

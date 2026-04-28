@@ -283,7 +283,7 @@ return
             id = double(fread(fid,1,'int32'));
             numUncompressed = double(fread(fid,1,'int64'));
             numCompressed   = double(fread(fid,1,'int64'));
-            data = double(fread(fid,numCompressed,'float64'))';
+            data = double(fread(fid,numCompressed,'float32'))';
             shapeData = [numUncompressed data];
             shapeLibrary.insert(id,shapeData);
         end
