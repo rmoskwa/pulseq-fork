@@ -52,14 +52,17 @@ function test_seq_text_binary_text_roundtrip(testCase)
             if strcmp(outTxt, canonicalTxt)
                 continue;
             end
-            writeTextFile('/tmp/roundtrip_mismatch_source.seq', srcTxt);
-            writeTextFile('/tmp/roundtrip_mismatch_canonical.seq', canonicalTxt);
-            writeTextFile('/tmp/roundtrip_mismatch_output.seq', outTxt);
+            roundtrip_mismatch_source=fullfile(tmpRoot,'roundtrip_mismatch_source.seq');
+            roundtrip_mismatch_canonical=fullfile(tmpRoot,'roundtrip_mismatch_canonical.seq');
+            roundtrip_mismatch_output=fullfile(tmpRoot,'roundtrip_mismatch_output.seq');
+            writeTextFile(roundtrip_mismatch_source, srcTxt);
+            writeTextFile(roundtrip_mismatch_canonical, canonicalTxt);
+            writeTextFile(roundtrip_mismatch_output, outTxt);
             diffPos = firstDiffPosition(srcTxt, outTxt);
             testCase.verifyFail(sprintf(['Roundtrip mismatch for file: %s. ' ...
                 'First differing position: %d. Debug copies written to: ' ...
-                '/tmp/roundtrip_mismatch_source.seq, /tmp/roundtrip_mismatch_canonical.seq, ' ...
-                'and /tmp/roundtrip_mismatch_output.seq'], ...
+                roundtrip_mismatch_source ', ' roundtrip_mismatch_canonical ...
+                ' and ' roundtrip_mismatch_output], ...
                 listing(k).name, diffPos));
         end
     end
