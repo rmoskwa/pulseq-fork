@@ -1,5 +1,6 @@
 #include "ExternalSequence.h"
 #include <stdio.h>
+#include <cstring>
 
 //#include <chrono> // for std::this_thread::sleep_for()
 //#include <thread> // for std::this_thread::sleep_for()
