@@ -2128,7 +2128,7 @@ classdef Sequence < handle
                                     wave_data_local=[[wave_data_local(1,1)-obj.gradRasterTime/2; 0] wave_data_local]; % this is likely to cause memory reallocations also later on
                                     len=len+1;
                                 else
-                                    % we are wihin the tolorance, just set it to 0 quaietly
+                                    % we are wihin the tolorance, just set it to 0 quietly
                                     wave_data_local(2,1)=0.0;
                                 end
                             end
@@ -2150,7 +2150,7 @@ classdef Sequence < handle
             for j=1:shape_channels
                 if any(diff(wave_data{j}(1,1:wave_cnt(j)))<=0.0) %&& ... % quick pre-check whether the time vector is monotonously increasing to avoid too often unique() calls
                     %wave_cnt(j)~=length(unique(wave_data{j}(1,1:wave_cnt(j))))
-                    warning('Warning: not all elements of the generated time vector are unique and sorted in accending order!\n');
+                    warning('Warning: not all elements of the generated time vector are unique and sorted in accending order!');
                 end
             end
 
