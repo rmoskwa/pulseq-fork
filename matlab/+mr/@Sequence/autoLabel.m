@@ -113,6 +113,7 @@ if isempty(opt.useLabels)
         slicepos(1:numel(opt.reorder),:)=slicepos(opt.reorder,:);
         sliceGrads(1:numel(opt.reorder),:)=sliceGrads(opt.reorder,:);
     end
+
     %% slice positions
     [~,i]=max(abs(sliceGrads));
     mainSliceGradSigns=sign(sliceGrads(sub2ind(size(sliceGrads),i,1:size(sliceGrads,2))));
@@ -135,9 +136,9 @@ if isempty(opt.useLabels)
         bSlice1=find(blockStartTimes<t_slicepos(1),1,'last');
         b=seq.getBlock(bSlice1);
         bw=mr.calcRfBandwidth(b.rf);
-        aux.sliceThickness=bw/GAs1;
+        aux.SliceThickness=bw/GAs1;
         if length(sortedSlicePositions)>1
-            aux.sliceGap=diff(sortedSlicePositions(1:2))-aux.sliceThickness;
+            aux.SliceGap=diff(sortedSlicePositions(1:2))-aux.SliceThickness;
         end
     end
 
@@ -165,6 +166,8 @@ if isempty(opt.useLabels)
     
     %% readout analysis    
     cEchoPos = zeros(1,nReadouts);
+    tEcho = zeros(1,nReadouts);
+    kEcho = zeros(3,nReadouts);
     gradReadout = zeros(3,nReadouts);
     signReadout = zeros(1,nReadouts);
     [~,kspaceCenterSample]=min(vecnorm(ktraj_adc(:,firstNonNoiseAdcSampe:end)));
@@ -175,8 +178,12 @@ if isempty(opt.useLabels)
         c2=c1+adcLengths(i+firstNonNoiseAdc-1)-1;
         % find echo pos for each readout
         [~,cEchoPos(i)]=min(vecnorm(ktraj_adc(:,c1:c2)-kspaceCenterPoint)); % for echos positioned between samples there can be some jitter... to reduce jitter we compare not to 0 but to the smallest absolute...
+        kEcho(:,i)=ktraj_adc(:,c1+cEchoPos(i)-1);
+        t_adcThisEcho=t_adc(c1+cEchoPos(i)-1);
+        i_sliseposThisEcho=find(t_slicepos<t_adcThisEcho,1,'last');
+        tEcho(i)=t_adcThisEcho-t_slicepos(i_sliseposThisEcho);
         for j=1:3
-            gradReadout(j,i) = ppval(gw_pp{j},t_adc(c1+cEchoPos(i)-1));        
+            gradReadout(j,i) = ppval(gw_pp{j},t_adcThisEcho);        
         end
         if ~isempty(opt.reflect)
             gradReadout(opt.reflect,i)=-gradReadout(opt.reflect,i);
@@ -194,7 +201,7 @@ if isempty(opt.useLabels)
         [~,j]=max(abs(gradReadout(:,i)));
         signReadout(i)=sign(gradReadout(j,i));
         % detect if the readout is sufficiently the same to see if the trajectory is Cartesian-like
-        if i>1 && vecnorm(gradReadout(:,i)*signReadout(i)-gradReadout(:,1)*signReadout(1))>1e-6 % why such threshold? 
+        if i>1 && vecnorm(gradReadout(:,i)*signReadout(i)-gradReadout(:,1)*signReadout(1))>1e-4 % why such threshold? 
             isCartesianReadout=false;
         end
         % % dictionary of readouts
@@ -265,8 +272,25 @@ if isempty(opt.useLabels)
     %   signReadout : sign of the dominant readout component
     %   kCentralReadout : the most central readout
     %   cCentralReadoutCenter : center of the above
-    %   cEchoPos : position of the echo for each readout
-    
+    %   cEchoPos : position of the echo within each ADC vector for each readout
+    %   tEcho : echo time for each readout
+    %   kEcho : k-space location of each echo
+
+    %% detect navigators
+    isNavigator=false(1,nReadouts);
+    isNavigatorCandidate = vecnorm(kEcho-kspaceCenterPoint) < 1e-4; % why this threshold?
+    orderedReadoutIndicator=diff(kEcho-kspaceCenterPoint,1,2);
+    i=find(max(abs(orderedReadoutIndicator'))>1e-4);
+    orderedReadoutIndicator=orderedReadoutIndicator(i,:); % discard empty dimensions
+    %TODO: finish this detection some day... e.g. if all(isNavigatorCandidate(1:3)) && abs(orderedReadoutIndicator(1)-orderedReadoutIndicator(2))<1e-4 && max(abs(diff(orderedReadoutIndicator(4:x))))<1e-4
+    if nReadouts>=16 && all(isNavigatorCandidate(1:3)) && abs(orderedReadoutIndicator(1)-orderedReadoutIndicator(2))<1e-4 && ...
+            max(abs(diff(orderedReadoutIndicator(4:16))))<1e-4
+        aux.epiWithThreeEchoNavigator=true;
+        % this is a real hack to close those singular k=0 lines in the middle of readouts
+        isNavigator = (isNavigatorCandidate + circshift(isNavigatorCandidate,1) + circshift(isNavigatorCandidate,-1))>1.5;
+        % TODO: set SEG (010 10101...) and AVG (001 00000...)
+    end
+
     %% Accelerate calculation for Cartesian-like sequences by only considering the echo position
     if isCartesianReadout
         ktraj_adc = ktraj_adc(:, adcStartCounts(firstNonNoiseAdc:end)+cEchoPos-1);
@@ -309,17 +333,20 @@ if isempty(opt.useLabels)
     sampler=zeros(length(uniqueSlicePositions),prod(kindex_end));
     repeat=zeros(1,size(ktraj_adc,2));
     for i=1:size(kindex_mat,2)
-        switch size(kindex_mat,1)
-            case 3
-                ind=sub2ind(kindex_end,kindex_mat(1,i),kindex_mat(2,i),kindex_mat(3,i));
-            case 2
-                ind=sub2ind(kindex_end,kindex_mat(1,i),kindex_mat(2,i)); 
-            otherwise
-                ind=kindex_mat(1,i); %sub2ind(kindex_end,kindex_mat(1,i));
+        if (~isNavigator(i))
+            % ignore navigators
+            switch size(kindex_mat,1)
+                case 3
+                    ind=sub2ind(kindex_end,kindex_mat(1,i),kindex_mat(2,i),kindex_mat(3,i));
+                case 2
+                    ind=sub2ind(kindex_end,kindex_mat(1,i),kindex_mat(2,i)); 
+                otherwise
+                    ind=kindex_mat(1,i); %sub2ind(kindex_end,kindex_mat(1,i));
+            end        
+            r=sampler(sliceCountersAdc(i),ind);
+            repeat(i)=r;
+            sampler(sliceCountersAdc(i),ind)=r+1;
         end
-        r=sampler(sliceCountersAdc(i),ind);
-        repeat(i)=r;
-        sampler(sliceCountersAdc(i),ind)=r+1;
     end
     % if (max(repeat(:))>0)
     %     kindex=[kindex;(repeat+1)];
@@ -336,7 +363,7 @@ if isempty(opt.useLabels)
     % REV
     % LIN,
     % PAR
-    % REP (in progress)
+    % REP 
     
     % TODO: SEG,ECO,REF,IMA,AVG,SET
 
@@ -384,6 +411,9 @@ if isempty(opt.useLabels)
         else
             labels.REP=repeat(:).';
         end
+    end
+    if any(isNavigator)
+        labels.NAV=isNavigator;
     end
 
     if isfield(labels,'LIN'), aux.kSpaceCenterLine = labels.LIN(cCentralReadout); end

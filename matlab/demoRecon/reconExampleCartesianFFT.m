@@ -63,7 +63,7 @@ axis('equal'); title('2D kx/kz k-space trajectory');
 
 %% Analyze the trajectory data (ktraj_adc)
 fprintf('analyzing the k-space trajectory ...\n');
-[labels, aux] = seq.autoLabel('skipApply',true,'reflect',[2,3]); % Siemens raw data require reflect on axes 2 and possibly 3
+[labels, aux] = seq.autoLabel('skipApply',true,'reflect',[1,2,3]); % Siemens raw data require reflect on axes 1,2 and possibly 3 ??? for now there seems to be a contradiction between 2D-multislice and 3D sequences
 
 %% build kindex_mat from labels
 % the code below currently ignores FID / CSI even if it is Cartesian per se, but autoLabel() also doe not support it (TODO?)
@@ -99,7 +99,12 @@ kindex_mat=zeros(nDims,lRO*lLBL);
 nDimInUse=nFFTs;
 
 if isfield(labels, 'REV')
-    kindex_mat(1,:)=reshape(kindexRO(labels.REV+1,:)',[1 lRO*lLBL]);
+    if size(aux.kReadout,1)>1
+        kindex_mat(1,:)=reshape(kindexRO(labels.REV+1,:)',[1 lRO*lLBL]);
+    else
+        assert(all(labels.REV));
+        kindex_mat(1,:)=reshape(kindexRO(ones(1,lLBL),end:-1:1)',[1 lRO*lLBL]); % manual reflect because all readouts in the sequence are marked with REV
+    end
 else
     kindex_mat(1,:)=reshape(kindexRO(ones(1,lLBL),:)',[1 lRO*lLBL]);
 end
