@@ -24,9 +24,6 @@ function [grad] = scaleGrad(grad, scale, system)
 %   INPUTS
 %     grad    [required]    gradient event struct from mr.makeTrapezoid,
 %                           mr.makeArbitraryGrad, or mr.makeExtendedTrapezoid.
-%                           Must NOT have an 'id' field (i.e., must not
-%                           already be registered with a Sequence's event
-%                           library); see ERRORS.
 %     scale   [required]    double, dimensionless multiplier. Use -1 for
 %                           polarity reversal; any real value is allowed
 %                           (limits are checked only if system is provided).
